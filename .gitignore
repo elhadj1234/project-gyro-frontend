@@ -1,0 +1,134 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+dist
+dist-ssr
+*.local
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Environment variables and secrets
+.env
+.env.*
+!.env.example
+.envrc
+
+# Security and credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+*.cer
+*.csr
+*.jks
+*.keystore
+*.truststore
+auth.json
+credentials.json
+secrets.json
+config/secrets.js
+config/keys.js
+
+# Database files
+*.db
+*.sqlite
+*.sqlite3
+*.db-journal
+
+# Backup files
+*.backup
+*.bak
+*.tmp
+*.temp
+*~
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# IDE and editor files
+.vscode/settings.json
+.vscode/launch.json
+.vscode/tasks.json
+.idea/
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# Build and cache directories
+build/
+coverage/
+.nyc_output/
+.cache/
+.parcel-cache/
+.next/
+out/
+.nuxt/
+.vuepress/dist/
+.serverless/
+.fusebox/
+
+# Package manager files
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+.pnpm-debug.log
+.yarn-integrity
+.yarn-error.log
+
+# Testing
+.coverage/
+coverage/
+*.lcov
+.jest/
+
+# Miscellaneous
+*.tgz
+*.tar.gz
+*.zip
+*.rar
+*.7z
+.eslintcache
+.stylelintcache
+
+# Local development
+.local
+.vercel
+.netlify
+
+# Docker
+Dockerfile.local
+docker-compose.override.yml
+.dockerignore
+
+# Supabase local development
+.branches
+.temp
+supabase/.temp
+supabase/config.toml
