@@ -359,6 +359,7 @@ body {
 .main {
   flex: 1;
   padding: 2rem 0;
+  padding-bottom: 120px; /* Add space for fixed footer */
 }
 
 /* --- Home Page --- */
@@ -391,11 +392,17 @@ body {
 
 /* --- Footer --- */
 .footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
   background: var(--card-bg);
   border-top: 1px solid var(--border-color);
   padding: 2rem 0;
   text-align: center;
   color: var(--text-muted);
+  z-index: 1000;
+  backdrop-filter: blur(10px);
 }
 
 /* --- Responsive Design --- */

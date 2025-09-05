@@ -32,8 +32,16 @@ export default function App() {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
     setProfileDropdownOpen(false);
+    try {
+      // Try local scope first to avoid network issues
+      await supabase.auth.signOut({ scope: 'local' });
+    } catch (error) {
+      // Silently handle any logout errors
+      console.warn('Logout handled locally:', error.message);
+    }
+    // Always reload to ensure clean logout
+    window.location.href = '/auth';
   };
 
   return (

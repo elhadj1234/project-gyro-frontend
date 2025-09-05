@@ -197,21 +197,40 @@ export default function Profile() {
   const handleFileUpload = async (file) => {
     if (!file) return;
 
+    // Validate file size (10MB limit)
+    if (file.size > 10 * 1024 * 1024) {
+      setMessage('Error: File size must be less than 10MB');
+      return;
+    }
+
+    // Validate file type
+    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
+    if (!allowedTypes.includes(file.type)) {
+      setMessage('Error: Please upload a PDF, DOC, or DOCX file');
+      return;
+    }
+
     setUploading(true);
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}_resume_${Date.now()}.${fileExt}`;
-      const filePath = `resumes/${fileName}`;
+      const filePath = `${user.id}/${fileName}`; // Organize by user ID
 
-      // Note: You'll need to create a 'user-files' bucket in Supabase Storage
+      // Upload to Supabase Storage
       const { error: uploadError } = await supabase.storage
-        .from('user-files')
+        .from('resumes')
         .upload(filePath, file);
 
-      if (uploadError) throw uploadError;
+      if (uploadError) {
+        if (uploadError.message.includes('Bucket not found')) {
+          throw new Error('Storage bucket "resumes" not found. Please create it in Supabase Dashboard.');
+        }
+        throw uploadError;
+      }
 
+      // Get public URL (use same bucket name)
       const { data: { publicUrl } } = supabase.storage
-        .from('user-files')
+        .from('resumes')
         .getPublicUrl(filePath);
 
       // Update resume data
@@ -741,13 +760,77 @@ function MyExperienceSection({ data, updateField, addArrayItem, removeArrayItem,
       {/* Resume */}
       <div className="subsection">
         <h3>Resume</h3>
+        
+        {/* File Upload Section */}
+        <div className="file-upload-container">
+          <div className="form-group">
+            <label>Upload Resume</label>
+            <div className="file-upload-wrapper">
+              <input 
+                type="file" 
+                id="resume-upload"
+                accept=".pdf,.doc,.docx"
+                onChange={(e) => {
+                  const file = e.target.files[0];
+                  if (file) {
+                    onFileUpload(file);
+                  }
+                }}
+                className="file-input"
+                disabled={uploading}
+              />
+              <label htmlFor="resume-upload" className={`file-upload-btn ${uploading ? 'uploading' : ''}`}>
+                {uploading ? (
+                  <>
+                    <span className="upload-spinner"></span>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <span className="upload-icon">📄</span>
+                    Choose Resume File
+                  </>
+                )}
+              </label>
+            </div>
+            <small className="file-help-text">Supported formats: PDF, DOC, DOCX (Max 10MB)</small>
+          </div>
+        </div>
+
+        {/* Current Resume Display */}
+        {data.resume.filename && (
+          <div className="current-resume">
+            <div className="resume-info">
+              <span className="file-icon">📄</span>
+              <div className="file-details">
+                <span className="file-name">{data.resume.filename}</span>
+                {data.resume.file_url && (
+                  <a 
+                    href={data.resume.file_url} 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                    className="view-resume-link"
+                  >
+                    View Resume
+                  </a>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Manual URL Input (Alternative) */}
         <div className="form-group">
-          <label>Resume Path/URL</label>
+          <label>Or provide Resume URL</label>
           <input 
-            type="text" 
+            type="url" 
             value={data.resume.path} 
-            onChange={(e) => updateField('my_experience', 'resume', { path: e.target.value })}
-            placeholder="Upload resume or provide URL"
+            onChange={(e) => updateField('my_experience', 'resume', { 
+              path: e.target.value,
+              filename: e.target.value ? 'External Resume' : '',
+              file_url: e.target.value 
+            })}
+            placeholder="https://example.com/resume.pdf"
           />
         </div>
       </div>
