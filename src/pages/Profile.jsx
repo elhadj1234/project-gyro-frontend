@@ -111,7 +111,6 @@ export default function Profile() {
         });
       }
     } catch (error) {
-      console.error('Error loading profile:', error);
       setMessage('Error loading profile data');
     } finally {
       setLoading(false);
@@ -123,7 +122,7 @@ export default function Profile() {
     setMessage("");
 
     try {
-      // Use upsert with proper conflict resolution
+  
       const { error } = await supabase
         .from('user_profiles')
         .upsert({
@@ -143,7 +142,6 @@ export default function Profile() {
       setMessage('Profile saved successfully!');
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      console.error('Error saving profile:', error);
       setMessage('Error saving profile: ' + error.message);
     } finally {
       setSaving(false);
@@ -155,14 +153,14 @@ export default function Profile() {
       const newData = { ...prev };
       
       if (index !== null) {
-        // Handle array updates
+  
         if (subField) {
           newData[section][field][index][subField] = value;
         } else {
           newData[section][field][index] = value;
         }
       } else {
-        // Handle direct field updates
+  
         if (typeof value === 'object' && value !== null) {
           newData[section][field] = { ...newData[section][field], ...value };
         } else {
@@ -197,13 +195,13 @@ export default function Profile() {
   const handleFileUpload = async (file) => {
     if (!file) return;
 
-    // Validate file size (10MB limit)
+
     if (file.size > 10 * 1024 * 1024) {
       setMessage('Error: File size must be less than 10MB');
       return;
     }
 
-    // Validate file type
+
     const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
     if (!allowedTypes.includes(file.type)) {
       setMessage('Error: Please upload a PDF, DOC, or DOCX file');
@@ -214,9 +212,9 @@ export default function Profile() {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}_resume_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`; // Organize by user ID
+      const filePath = `${user.id}/${fileName}`;
 
-      // Upload to Supabase Storage
+  
       const { error: uploadError } = await supabase.storage
         .from('resumes')
         .upload(filePath, file);
@@ -228,12 +226,12 @@ export default function Profile() {
         throw uploadError;
       }
 
-      // Get public URL (use same bucket name)
+  
       const { data: { publicUrl } } = supabase.storage
         .from('resumes')
         .getPublicUrl(filePath);
 
-      // Update resume data
+  
       updateNestedField('my_experience', 'resume', {
         path: filePath,
         filename: file.name,
@@ -243,7 +241,6 @@ export default function Profile() {
       setMessage('Resume uploaded successfully!');
       setTimeout(() => setMessage(""), 3000);
     } catch (error) {
-      console.error('Error uploading file:', error);
       setMessage('Error uploading resume: ' + error.message);
     } finally {
       setUploading(false);
@@ -335,7 +332,7 @@ export default function Profile() {
   );
 }
 
-// My Information Section Component
+
 function MyInformationSection({ data, updateField }) {
   return (
     <div className="form-section">
@@ -481,7 +478,7 @@ function MyInformationSection({ data, updateField }) {
   );
 }
 
-// My Experience Section Component
+
 function MyExperienceSection({ data, updateField, addArrayItem, removeArrayItem, onFileUpload, uploading }) {
   return (
     <div className="form-section">
@@ -838,7 +835,7 @@ function MyExperienceSection({ data, updateField, addArrayItem, removeArrayItem,
   );
 }
 
-// Application Questions Section Component
+
 function ApplicationQuestionsSection({ data, updateField }) {
   const questions = Object.keys(data);
   
@@ -862,7 +859,7 @@ function ApplicationQuestionsSection({ data, updateField }) {
   );
 }
 
-// Personal Information Section Component
+
 function PersonalInformationSection({ data, updateField }) {
   return (
     <div className="form-section">
@@ -939,7 +936,7 @@ function PersonalInformationSection({ data, updateField }) {
   );
 }
 
-// Self Identity Section Component
+
 function SelfIdentitySection({ data, updateField }) {
   return (
     <div className="form-section">

@@ -3,7 +3,7 @@ import { useAuth } from "../AuthProvider";
 import { supabase } from "../supabaseClient";
 
 export default function Dashboard() {
-  const { user } = useAuth();
+  const { user, session } = useAuth();
   const [url, setUrl] = useState('');
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -12,6 +12,11 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [savedLinks, setSavedLinks] = useState([]);
   const [applying, setApplying] = useState({});
+  const [profile, setProfile] = useState(null);
+
+  const isAuthenticated = () => {
+    return session && session.user && user;
+  };
 
   useEffect(() => {
     if (user) {
@@ -21,6 +26,10 @@ export default function Dashboard() {
 
   const getProfileData = async () => {
     try {
+      if (!isAuthenticated()) {
+        return null;
+      }
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -28,13 +37,11 @@ export default function Dashboard() {
         .single();
       
       if (error && error.code !== 'PGRST116') {
-        console.error('Error loading profile:', error);
         return null;
       }
       
       return data;
     } catch (error) {
-      console.error('Error loading profile:', error);
       return null;
     }
   };
@@ -44,7 +51,6 @@ export default function Dashboard() {
     setMessage('');
     
     try {
-      // Get user profile data
       const profileData = await getProfileData();
       
       if (!profileData) {
@@ -52,13 +58,15 @@ export default function Dashboard() {
         return;
       }
       
-      // Check if already applied
       if (link.application_status) {
         setMessage('ℹ️ You have already applied to this job.');
         return;
       }
       
-      // Update the link with application data
+      if (!isAuthenticated()) {
+        setMessage('❌ Authentication error: Please sign in again.');
+        return;
+      }
       const { data, error } = await supabase
         .from('user_links')
         .update({
@@ -68,7 +76,7 @@ export default function Dashboard() {
           application_notes: `Applied via Link Saver to ${link.title || link.url}`
         })
         .eq('id', link.id)
-        .eq('user_id', user.id)
+        .eq('user_id', session.user.id)
         .select();
       
       if (error) {
@@ -96,6 +104,12 @@ export default function Dashboard() {
     
     try {
       setLoading(true);
+      
+      if (!isAuthenticated()) {
+        setMessage('❌ Authentication error: Please sign in again.');
+        return;
+      }
+      
       const { data, error } = await supabase
         .from('user_links')
         .select('*')
@@ -103,13 +117,11 @@ export default function Dashboard() {
         .order('created_at', { ascending: false });
       
       if (error) {
-        console.error('Error loading job applications:', error);
         setMessage('❌ Error loading your job applications: ' + error.message);
       } else {
         setSavedLinks(data || []);
       }
     } catch (error) {
-      console.error('Error loading job applications:', error);
       setMessage('❌ Error loading your job applications. Please try again.');
     } finally {
       setLoading(false);
@@ -124,7 +136,11 @@ export default function Dashboard() {
     setMessage('');
 
     try {
-      // Insert new job application link into Supabase
+      if (!isAuthenticated()) {
+        setMessage('❌ Authentication error: Please sign in again.');
+        setSubmitting(false);
+        return;
+      }
       const { data, error } = await supabase
         .from('user_links')
         .insert({
@@ -138,21 +154,18 @@ export default function Dashboard() {
         .select();
 
       if (error) {
-        console.error('Error saving job application:', error);
         setMessage('❌ Error saving job application: ' + error.message);
       } else {
         setMessage('✅ Job application link saved successfully!');
-        // Reset form
         setUrl('');
         setTitle('');
         setDescription('');
-        // Reload links to show the new one
+        
         await loadUserLinks();
-        // Clear message after 3 seconds
+        
         setTimeout(() => setMessage(''), 3000);
       }
     } catch (error) {
-      console.error('Error saving job application:', error);
       setMessage('❌ Error saving job application. Please try again.');
     } finally {
       setSubmitting(false);
@@ -163,24 +176,25 @@ export default function Dashboard() {
     if (!confirm('Are you sure you want to delete this job application?')) return;
     
     try {
+      if (!isAuthenticated()) {
+        setMessage('❌ Authentication error: Please sign in again.');
+        return;
+      }
+      
       const { error } = await supabase
         .from('user_links')
         .delete()
         .eq('id', linkId)
-        .eq('user_id', user.id); // Extra security check
+        .eq('user_id', user.id);
       
       if (error) {
-        console.error('Error deleting job application:', error);
         setMessage('❌ Error deleting job application: ' + error.message);
       } else {
         setMessage('✅ Job application deleted successfully!');
-        // Reload links to reflect the deletion
         await loadUserLinks();
-        // Clear message after 3 seconds
         setTimeout(() => setMessage(''), 3000);
       }
     } catch (error) {
-      console.error('Error deleting job application:', error);
       setMessage('❌ Error deleting job application. Please try again.');
     }
   };
@@ -189,7 +203,11 @@ export default function Dashboard() {
     try {
       await supabase.auth.signOut({ scope: 'local' });
     } catch (error) {
-      console.warn('Logout handled locally:', error.message);
+      try {
+        await supabase.auth.signOut();
+      } catch (globalError) {
+        console.warn('Logout errors handled:', { local: error.message, global: globalError.message });
+      }
     }
     window.location.href = '/auth';
   };

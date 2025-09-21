@@ -33,14 +33,14 @@ export default function App() {
 
   const handleLogout = async () => {
     setProfileDropdownOpen(false);
+    
     try {
-      // Try local scope first to avoid network issues
-      await supabase.auth.signOut({ scope: 'local' });
+      localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token');
+      sessionStorage.clear();
     } catch (error) {
-      // Silently handle any logout errors
-      console.warn('Logout handled locally:', error.message);
+      // Silent error handling for localStorage access
     }
-    // Always reload to ensure clean logout
+    
     window.location.href = '/auth';
   };
 
@@ -188,6 +188,7 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+
           </Routes>
         </div>
       </main>
