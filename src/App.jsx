@@ -34,14 +34,21 @@ export default function App() {
   const handleLogout = async () => {
     setProfileDropdownOpen(false);
     
+    // COMPLETE BYPASS - No network calls, no errors, instant logout
+    // This completely eliminates net::ERR_ABORTED errors
+    
     try {
+      // Clear ALL authentication data from storage
       localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token');
       sessionStorage.clear();
+      localStorage.removeItem('supabase-auth-token');
+      localStorage.removeItem('auth-session');
     } catch (error) {
-      // Silent error handling for localStorage access
+      console.warn('Storage cleanup error:', error?.message);
     }
     
-    window.location.href = '/auth';
+    // Force redirect to auth page - no delays, no waiting
+    window.location.replace('/auth');
   };
 
   return (

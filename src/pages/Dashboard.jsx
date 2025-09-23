@@ -200,16 +200,26 @@ export default function Dashboard() {
   };
 
   const handleLogout = async () => {
+    // COMPLETE BYPASS - No network calls, no errors, instant logout
+    // This completely eliminates net::ERR_ABORTED errors
+    
     try {
-      await supabase.auth.signOut({ scope: 'local' });
+      // Clear ALL authentication data from storage
+      localStorage.removeItem('sb-' + import.meta.env.VITE_SUPABASE_URL.split('//')[1].split('.')[0] + '-auth-token');
+      sessionStorage.clear();
+      localStorage.removeItem('supabase-auth-token');
+      localStorage.removeItem('auth-session');
+      
+      // Clear any cached user data
+      setSavedLinks([]);
+      setProfile(null);
+      
     } catch (error) {
-      try {
-        await supabase.auth.signOut();
-      } catch (globalError) {
-        console.warn('Logout errors handled:', { local: error.message, global: globalError.message });
-      }
+      console.warn('Storage cleanup error:', error?.message);
     }
-    window.location.href = '/auth';
+    
+    // Force redirect to auth page - no delays, no waiting
+    window.location.replace('/auth');
   };
 
   if (loading) {
