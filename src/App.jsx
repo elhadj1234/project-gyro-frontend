@@ -1,5 +1,5 @@
-import { Routes, Route, Link } from "react-router-dom";
-import { useState } from "react";
+import { Routes, Route, Link, Navigate, useLocation } from "react-router-dom";
+import { useState, useEffect, useRef } from "react";
 import Auth from "./pages/Auth";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
@@ -9,10 +9,99 @@ import { supabase } from "./supabaseClient";
 
 function Home() { 
   return (
-    <div className="home-content">
-      <section className="hero">
-        <h1>Welcome to Our Platform</h1>
-        <p>Your secure authentication solution</p>
+    <div className="home">
+      {/* Hero */}
+      <section className="home-hero">
+        <div className="container hero-content">
+          <div className="hero-text">
+            <h1 className="hero-title">Auto‑apply to jobs with <span className="brand">Tempra</span></h1>
+            <p className="hero-subtitle">
+              Automatically submit applications on supported job sites, track status, and stay organized.
+            </p>
+            <div className="cta-buttons">
+              <Link to="/auth" className="btn btn-primary">Get Started</Link>
+              <Link to="/dashboard" className="btn btn-secondary">Go to Dashboard</Link>
+            </div>
+          </div>
+          <div className="hero-visual" aria-hidden="true">
+            <svg viewBox="0 0 240 160" className="hero-illustration" role="img" aria-label="Abstract dashboard illustration">
+              <defs>
+                <linearGradient id="grad" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#6a11cb"/>
+                  <stop offset="100%" stopColor="#2575fc"/>
+                </linearGradient>
+              </defs>
+              <rect x="0" y="0" width="240" height="160" rx="12" fill="url(#grad)" opacity="0.15"/>
+              <rect x="16" y="20" width="208" height="28" rx="6" fill="#ffffff" opacity="0.9"/>
+              <rect x="16" y="56" width="96" height="22" rx="6" fill="#ffffff" opacity="0.9"/>
+              <rect x="128" y="56" width="96" height="22" rx="6" fill="#ffffff" opacity="0.75"/>
+              <rect x="16" y="86" width="208" height="50" rx="8" fill="#ffffff" opacity="0.8"/>
+              <circle cx="40" cy="36" r="6" fill="#6a11cb"/>
+              <circle cx="58" cy="36" r="6" fill="#2575fc"/>
+              <circle cx="76" cy="36" r="6" fill="#00c6ff"/>
+            </svg>
+          </div>
+        </div>
+      </section>
+
+      {/* Features */}
+      <section className="features">
+        <div className="container">
+          <h2 className="section-title">Everything you need to stay organized</h2>
+          <div className="features-grid">
+            <article className="feature-card">
+              <div className="feature-icon" aria-hidden="true">🔗</div>
+              <h3 className="feature-title">Save roles fast</h3>
+              <p className="feature-text">Bookmark job postings across the web with one click.</p>
+            </article>
+            <article className="feature-card">
+              <div className="feature-icon" aria-hidden="true">⚙️</div>
+              <h3 className="feature-title">Auto‑apply on job sites</h3>
+              <p className="feature-text">Automatically submit applications on supported job websites.</p>
+            </article>
+            <article className="feature-card">
+              <div className="feature-icon" aria-hidden="true">🧑‍💼</div>
+              <h3 className="feature-title">Track and stay ready</h3>
+              <p className="feature-text">Monitor statuses and keep your resume/profile ready to go.</p>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      {/* How it works */}
+      <section className="steps">
+        <div className="container">
+          <h2 className="section-title">How Tempra works</h2>
+          <div className="steps-grid">
+            <div className="step-card">
+              <div className="step-number">1</div>
+              <h3 className="step-title">Sign in</h3>
+              <p className="step-text">Create an account or sign in to sync your data securely.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-number">2</div>
+              <h3 className="step-title">Auto‑apply</h3>
+              <p className="step-text">Choose jobs and let Tempra submit on supported job sites.</p>
+            </div>
+            <div className="step-card">
+              <div className="step-number">3</div>
+              <h3 className="step-title">Track status</h3>
+              <p className="step-text">Monitor progress and keep materials updated for next steps.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Call to action */}
+      <section className="cta">
+        <div className="container cta-inner">
+          <h2 className="cta-title">Ready to get organized?</h2>
+          <p className="cta-text">Join Tempra and streamline your job search today.</p>
+          <div className="cta-buttons">
+            <Link to="/auth" className="btn btn-primary">Create your account</Link>
+            <Link to="/dashboard" className="btn btn-secondary">See the dashboard</Link>
+          </div>
+        </div>
       </section>
     </div>
   );
@@ -22,6 +111,31 @@ export default function App() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [profileDropdownOpen, setProfileDropdownOpen] = useState(false);
   const { user } = useAuth();
+  const dropdownRef = useRef(null);
+  const location = useLocation();
+
+  // Update document title and canonical per route
+  useEffect(() => {
+    const { pathname } = location;
+    const baseTitle = 'Tempra';
+    const titles = {
+      '/': `${baseTitle} — Auto‑apply to jobs and stay organized`,
+      '/auth': `${baseTitle} — Sign In`,
+      '/dashboard': `${baseTitle} — Dashboard`,
+      '/profile': `${baseTitle} — Profile`,
+    };
+    document.title = titles[pathname] || baseTitle;
+
+    const canonicalHref = `${window.location.origin}${pathname}`;
+    let link = document.querySelector('#canonical-link');
+    if (!link) {
+      link = document.createElement('link');
+      link.setAttribute('rel', 'canonical');
+      link.setAttribute('id', 'canonical-link');
+      document.head.appendChild(link);
+    }
+    link.setAttribute('href', canonicalHref);
+  }, [location]);
 
   const toggleMobileMenu = () => {
     setMobileMenuOpen(!mobileMenuOpen);
@@ -30,6 +144,16 @@ export default function App() {
   const toggleProfileDropdown = () => {
     setProfileDropdownOpen(!profileDropdownOpen);
   };
+
+  useEffect(() => {
+    const handleOutsideClick = (e) => {
+      if (profileDropdownOpen && dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setProfileDropdownOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [profileDropdownOpen]);
 
   const handleLogout = async () => {
     setProfileDropdownOpen(false);
@@ -53,15 +177,20 @@ export default function App() {
 
   return (
     <div className="app">
+      {/* Skip to main content for keyboard users */}
+      <a href="#main-content" className="skip-link">Skip to main content</a>
       {/* Header Navigation */}
-      <header className="header">
-        <div className="container">
-          <div className="nav-brand">
-            <Link to="/" className="logo">MyApp</Link>
+      <header className="site-header" role="banner">
+        <div className="container header-inner">
+          <div className="logo-wrap">
+            <Link to="/" className="logo-home" aria-label="Home">
+              <img src="/Tempra.png" alt="Tempra logo" className="header-logo-img" />
+              <span className="header-logo">Tempra</span>
+            </Link>
           </div>
           
           {/* Desktop Navigation */}
-          <nav className="nav-desktop">
+          <nav className="header-nav" role="navigation" aria-label="Primary">
             <Link to="/" className="nav-link">Home</Link>
             {user ? (
               <>
@@ -69,9 +198,17 @@ export default function App() {
                 {/* Profile Dropdown */}
                 <div className="profile-dropdown">
                   <button 
+                    id="profile-menu-button"
                     className="profile-btn"
                     onClick={toggleProfileDropdown}
+                    onKeyDown={(e) => {
+                      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleProfileDropdown(); }
+                      if (e.key === 'Escape') { setProfileDropdownOpen(false); }
+                    }}
                     aria-label="Profile menu"
+                    aria-haspopup="menu"
+                    aria-expanded={profileDropdownOpen}
+                    aria-controls="profile-menu"
                   >
                     <div className="profile-avatar">
                       {user.email?.charAt(0).toUpperCase()}
@@ -88,10 +225,22 @@ export default function App() {
                   </button>
                   
                   {profileDropdownOpen && (
-                    <div className="dropdown-menu">
+                    <div 
+                      id="profile-menu" 
+                      className="dropdown-menu" 
+                      role="menu" 
+                      aria-labelledby="profile-menu-button"
+                      onKeyDown={(e) => {
+                        if (e.key === 'Escape') { 
+                          setProfileDropdownOpen(false);
+                          document.getElementById('profile-menu-button')?.focus();
+                        }
+                      }}
+                    >
                       <Link 
                         to="/profile" 
                         className="dropdown-item"
+                        role="menuitem"
                         onClick={() => setProfileDropdownOpen(false)}
                       >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -102,6 +251,7 @@ export default function App() {
                       <Link 
                         to="/dashboard" 
                         className="dropdown-item"
+                        role="menuitem"
                         onClick={() => setProfileDropdownOpen(false)}
                       >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -111,6 +261,7 @@ export default function App() {
                       </Link>
                       <button 
                         className="dropdown-item logout-btn"
+                        role="menuitem"
                         onClick={handleLogout}
                       >
                         <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
@@ -132,7 +283,13 @@ export default function App() {
           <button 
             className="mobile-menu-btn"
             onClick={toggleMobileMenu}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleMobileMenu(); }
+            }}
             aria-label="Toggle menu"
+            aria-controls="mobile-nav"
+            aria-expanded={mobileMenuOpen}
+            id="mobile-menu-button"
           >
             <span></span>
             <span></span>
@@ -142,7 +299,7 @@ export default function App() {
 
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
-          <nav className="nav-mobile">
+          <nav className="nav-mobile" role="navigation" aria-label="Mobile" id="mobile-nav">
             <Link to="/" className="nav-link" onClick={toggleMobileMenu}>Home</Link>
             {user ? (
               <>
@@ -174,7 +331,7 @@ export default function App() {
       </header>
 
       {/* Main Content */}
-      <main className="main">
+      <main className="main" id="main-content" role="main">
         <div className="container">
           <Routes>
             <Route path="/" element={<Home />} />
@@ -195,6 +352,8 @@ export default function App() {
                 </ProtectedRoute>
               }
             />
+            {/* Fallback: redirect any unknown path to Home */}
+            <Route path="*" element={<Navigate to="/" replace />} />
 
           </Routes>
         </div>

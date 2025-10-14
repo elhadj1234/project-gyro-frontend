@@ -64,124 +64,17 @@ export default function Auth() {
     }
   };
 
-  const containerStyle = {
-    height: '100vh',
-    width: '100vw',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: '10px',
-    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-    overflow: 'hidden',
-    position: 'fixed',
-    top: 0,
-    left: 0
-  };
-
-  const cardStyle = {
-    background: 'rgba(255, 255, 255, 0.95)',
-    backdropFilter: 'blur(20px)',
-    borderRadius: '20px',
-    padding: '30px',
-    width: '100%',
-    maxWidth: '400px',
-    maxHeight: '90vh',
-    overflowY: 'auto',
-    boxShadow: '0 20px 40px rgba(0, 0, 0, 0.1)',
-    border: '1px solid rgba(255, 255, 255, 0.2)',
-    transition: 'transform 0.3s ease, box-shadow 0.3s ease',
-    transform: isLoading ? 'scale(0.98)' : 'scale(1)'
-  };
-
-  const titleStyle = {
-    fontSize: '28px',
-    fontWeight: '700',
-    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    WebkitBackgroundClip: 'text',
-    WebkitTextFillColor: 'transparent',
-    textAlign: 'center',
-    marginBottom: '20px',
-    letterSpacing: '-0.5px'
-  };
-
-  const inputStyle = {
-    width: '100%',
-    padding: '14px 18px',
-    marginBottom: '15px',
-    border: '2px solid #e1e5e9',
-    borderRadius: '12px',
-    fontSize: '16px',
-    transition: 'all 0.3s ease',
-    backgroundColor: '#fafbfc',
-    color: '#2d3748',
-    outline: 'none',
-    fontFamily: 'inherit'
-  };
-
-  const inputFocusStyle = {
-    ...inputStyle,
-    borderColor: '#667eea',
-    backgroundColor: '#fff',
-    color: '#1a202c',
-    boxShadow: '0 0 0 3px rgba(102, 126, 234, 0.1)'
-  };
-
-  const buttonStyle = {
-    width: '100%',
-    padding: '16px',
-    background: isLoading ? '#9ca3af' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-    color: 'white',
-    border: 'none',
-    borderRadius: '12px',
-    fontSize: '16px',
-    fontWeight: '600',
-    cursor: isLoading ? 'not-allowed' : 'pointer',
-    transition: 'all 0.3s ease',
-    transform: isLoading ? 'scale(0.98)' : 'scale(1)',
-    boxShadow: isLoading ? 'none' : '0 4px 15px rgba(102, 126, 234, 0.4)',
-    fontFamily: 'inherit'
-  };
-
-  const linkButtonStyle = {
-    background: 'none',
-    border: 'none',
-    color: '#667eea',
-    textDecoration: 'none',
-    cursor: 'pointer',
-    fontWeight: '600',
-    fontSize: '14px',
-    transition: 'color 0.3s ease',
-    fontFamily: 'inherit'
-  };
-
-  const messageStyle = {
-    padding: '12px 16px',
-    borderRadius: '8px',
-    marginTop: '20px',
-    textAlign: 'center',
-    fontSize: '14px',
-    fontWeight: '500'
-  };
-
-  const errorStyle = {
-    ...messageStyle,
-    backgroundColor: '#fee2e2',
-    color: '#dc2626',
-    border: '1px solid #fecaca'
-  };
-
-  const successStyle = {
-    ...messageStyle,
-    backgroundColor: '#d1fae5',
-    color: '#059669',
-    border: '1px solid #a7f3d0'
-  };
+  const containerStyle = {};
+  const cardStyle = {};
+  const titleStyle = {};
+  const messageStyle = {};
+  const errorStyle = {};
+  const successStyle = {};
 
   return (
-    <div style={containerStyle}>
-      <div style={cardStyle}>
-        <h1 style={titleStyle}>
+    <div className="auth-page">
+      <div className="dashboard-card">
+        <h1 className="dashboard-title">
           {mode === "signin" ? "Welcome Back" : 
            mode === "signup" ? "Create Account" : 
            mode === "reset" ? "Reset Password" : "Update Password"}
@@ -194,9 +87,7 @@ export default function Auth() {
             value={email}
             required
             onChange={(e) => setEmail(e.target.value)}
-            style={inputStyle}
-            onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-            onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+            className="input-control"
           />
           
           {mode !== "reset" && (
@@ -207,9 +98,7 @@ export default function Auth() {
                 value={password}
                 required
                 onChange={(e) => setPassword(e.target.value)}
-                style={inputStyle}
-                onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+                className="input-control"
               />
               
               {mode === "update-password" && (
@@ -219,9 +108,7 @@ export default function Auth() {
                   value={confirmPassword}
                   required
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  style={inputStyle}
-                  onFocus={(e) => Object.assign(e.target.style, inputFocusStyle)}
-                  onBlur={(e) => Object.assign(e.target.style, inputStyle)}
+                  className="input-control"
                 />
               )}
             </>
@@ -229,20 +116,8 @@ export default function Auth() {
           
           <button 
             type="submit" 
-            style={buttonStyle}
             disabled={isLoading}
-            onMouseEnter={(e) => {
-              if (!isLoading) {
-                e.target.style.transform = 'translateY(-2px)';
-                e.target.style.boxShadow = '0 6px 20px rgba(102, 126, 234, 0.6)';
-              }
-            }}
-            onMouseLeave={(e) => {
-              if (!isLoading) {
-                e.target.style.transform = 'translateY(0)';
-                e.target.style.boxShadow = '0 4px 15px rgba(102, 126, 234, 0.4)';
-              }
-            }}
+            className="btn btn-primary"
           >
             {isLoading ? (
               <span>⏳ Processing...</span>
@@ -256,32 +131,28 @@ export default function Auth() {
           </button>
         </form>
         
-        {error && <div style={errorStyle}>❌ {error}</div>}
-        {message && <div style={successStyle}>{message}</div>}
+        {error && <div className="dashboard-message dashboard-message--error">❌ {error}</div>}
+        {message && <div className="dashboard-message dashboard-message--success">{message}</div>}
         
-          <div style={{ marginTop: '20px', textAlign: 'center' }}>
+          <div className="auth-helper">
             {mode === "signin" && (
               <>
-                <p style={{ color: '#6b7280', fontSize: '14px', marginBottom: '15px' }}>
+                <p className="helper-text">
                   Don't have an account?{" "}
                   <button 
                     type="button" 
                     onClick={() => setMode("signup")}
-                    style={linkButtonStyle}
-                    onMouseEnter={(e) => e.target.style.color = '#4f46e5'}
-                    onMouseLeave={(e) => e.target.style.color = '#667eea'}
+                    className="link-btn"
                   >
                     Create one here ✨
                   </button>
                 </p>
-                <p style={{ color: '#6b7280', fontSize: '14px' }}>
+                <p className="helper-text">
                   Forgot your password?{" "}
                   <button 
                     type="button" 
                     onClick={() => setMode("reset")}
-                    style={linkButtonStyle}
-                    onMouseEnter={(e) => e.target.style.color = '#4f46e5'}
-                    onMouseLeave={(e) => e.target.style.color = '#667eea'}
+                    className="link-btn"
                   >
                     Reset it here 🔑
                   </button>
@@ -290,14 +161,12 @@ export default function Auth() {
             )}
             
             {mode === "signup" && (
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              <p className="helper-text">
                 Already have an account?{" "}
                 <button 
                   type="button" 
                   onClick={() => setMode("signin")}
-                  style={linkButtonStyle}
-                  onMouseEnter={(e) => e.target.style.color = '#4f46e5'}
-                  onMouseLeave={(e) => e.target.style.color = '#667eea'}
+                  className="link-btn"
                 >
                   Sign in here 🚀
                 </button>
@@ -305,14 +174,12 @@ export default function Auth() {
             )}
             
             {mode === "reset" && (
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              <p className="helper-text">
                 Remember your password?{" "}
                 <button 
                   type="button" 
                   onClick={() => setMode("signin")}
-                  style={linkButtonStyle}
-                  onMouseEnter={(e) => e.target.style.color = '#4f46e5'}
-                  onMouseLeave={(e) => e.target.style.color = '#667eea'}
+                  className="link-btn"
                 >
                   Sign in here 🚀
                 </button>
@@ -320,13 +187,11 @@ export default function Auth() {
             )}
             
             {mode === "update-password" && (
-              <p style={{ color: '#6b7280', fontSize: '14px' }}>
+              <p className="helper-text">
                 <button 
                   type="button" 
                   onClick={() => setMode("signin")}
-                  style={linkButtonStyle}
-                  onMouseEnter={(e) => e.target.style.color = '#4f46e5'}
-                  onMouseLeave={(e) => e.target.style.color = '#667eea'}
+                  className="link-btn"
                 >
                   ← Back to Sign In
                 </button>

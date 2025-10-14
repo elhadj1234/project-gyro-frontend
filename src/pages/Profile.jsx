@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useAuth } from "../AuthProvider";
 import { supabase } from "../supabaseClient";
 
@@ -79,9 +79,10 @@ export default function Profile() {
   const [profileData, setProfileData] = useState(initialProfileData);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [uploading, setUploading] = useState(false);
   const [message, setMessage] = useState("");
   const [activeSection, setActiveSection] = useState("my_information");
+  const [uploading, setUploading] = useState(false);
+  const resumeInputRef = useRef(null);
 
   useEffect(() => {
     if (user) {
@@ -192,58 +193,78 @@ export default function Profile() {
     }));
   };
 
-  const handleFileUpload = async (file) => {
-    if (!file) return;
-
-
-    if (file.size > 10 * 1024 * 1024) {
-      setMessage('Error: File size must be less than 10MB');
-      return;
-    }
-
-
-    const allowedTypes = ['application/pdf', 'application/msword', 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'];
-    if (!allowedTypes.includes(file.type)) {
-      setMessage('Error: Please upload a PDF, DOC, or DOCX file');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}_resume_${Date.now()}.${fileExt}`;
-      const filePath = `${user.id}/${fileName}`;
-
+  // Derived profile helpers
+  const email = user?.email || '';
+  const initials = (email?.[0] || 'U').toUpperCase();
+  const skillsCount = profileData?.my_experience?.skills?.length || 0;
+  const jobsCount = profileData?.my_experience?.work_experience?.length || 0;
+  const eduCount = profileData?.my_experience?.education?.length || 0;
   
-      const { error: uploadError } = await supabase.storage
-        .from('resumes')
-        .upload(filePath, file);
-
-      if (uploadError) {
-        if (uploadError.message.includes('Bucket not found')) {
-          throw new Error('Storage bucket "resumes" not found. Please create it in Supabase Dashboard.');
-        }
-        throw uploadError;
+  // Resume upload (restored); view functionality remains removed
+  const handleFileUpload = async (event) => {
+    try {
+      setUploading(true);
+      const file = event.target.files?.[0];
+      if (!file) {
+        setUploading(false);
+        return;
       }
 
-  
-      const { data: { publicUrl } } = supabase.storage
-        .from('resumes')
-        .getPublicUrl(filePath);
+      const ext = file.name.includes('.') ? file.name.split('.').pop() : 'pdf';
+      const randomKey = (typeof crypto !== 'undefined' && crypto.randomUUID) 
+        ? `${crypto.randomUUID()}.${ext}`
+        : `${Math.random().toString(36).slice(2)}-${Date.now()}.${ext}`;
 
-  
+      const { data: storageData, error: storageError } = await supabase.storage
+        .from('resumes')
+        .upload(randomKey, file, {
+          upsert: false,
+          contentType: file.type || 'application/octet-stream',
+        });
+
+      if (storageError) throw storageError;
+
+      // For private buckets, do not store a public URL. Keep path + filename.
       updateNestedField('my_experience', 'resume', {
-        path: filePath,
         filename: file.name,
-        file_url: publicUrl
+        path: storageData?.path || randomKey,
       });
 
       setMessage('Resume uploaded successfully!');
       setTimeout(() => setMessage(""), 3000);
-    } catch (error) {
-      setMessage('Error uploading resume: ' + error.message);
+    } catch (err) {
+      console.error('Resume upload error:', err);
+      setMessage('Error uploading resume: ' + (err?.message || 'Please try again'));
     } finally {
       setUploading(false);
+      if (resumeInputRef.current) {
+        resumeInputRef.current.value = '';
+      }
+    }
+  };
+
+  const triggerResumeUpload = () => {
+    resumeInputRef.current?.click();
+  };
+
+  const viewResume = async () => {
+    try {
+      const path = profileData?.my_experience?.resume?.path;
+      if (!path) {
+        setMessage('No resume uploaded yet.');
+        setTimeout(() => setMessage(""), 2500);
+        return;
+      }
+      const { data, error } = await supabase.storage
+        .from('resumes')
+        .createSignedUrl(path, 120);
+      if (error) throw error;
+      const url = data?.signedUrl;
+      if (!url) throw new Error('Failed to generate signed URL');
+      window.open(url, '_blank', 'noopener');
+    } catch (err) {
+      console.error('View resume error:', err);
+      setMessage('Error generating secure view link: ' + (err?.message || 'Please try again'));
     }
   };
 
@@ -256,76 +277,106 @@ export default function Profile() {
   }
 
   return (
-    <div className="profile-container">
-      <div className="profile-header">
-        <h1>My Profile</h1>
-        <button 
-          onClick={saveProfile} 
-          disabled={saving}
-          className="save-btn"
-        >
-          {saving ? 'Saving...' : 'Save Profile'}
-        </button>
-      </div>
-
-      {message && (
-        <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
-          {message}
+    <div className="profile-page">
+      <div className="profile-card">
+        <div className="profile-card-header">
+          <div className="profile-avatar-lg" aria-hidden="true">{initials}</div>
+          <div className="profile-id">
+            <h1 className="profile-title">My Profile</h1>
+            <p className="profile-email-text">{email}</p>
+          </div>
+        <div className="profile-actions">
+          <button onClick={saveProfile} disabled={saving} className="btn btn-primary">
+            {saving ? 'Saving...' : 'Save Profile'}
+          </button>
+          <button onClick={triggerResumeUpload} disabled={uploading} className="btn btn-secondary" style={{ marginLeft: '0.75rem' }}>
+            {uploading ? 'Uploading…' : 'Upload Resume'}
+          </button>
+          <input
+            type="file"
+            accept=".pdf,.doc,.docx"
+            ref={resumeInputRef}
+            onChange={handleFileUpload}
+            style={{ display: 'none' }}
+          />
         </div>
-      )}
+        </div>
 
-      <div className="profile-content">
-        <nav className="profile-nav">
-          {Object.keys(initialProfileData).map(section => (
-            <button
-              key={section}
-              className={`nav-btn ${activeSection === section ? 'active' : ''}`}
-              onClick={() => setActiveSection(section)}
-            >
-              {section.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
-            </button>
-          ))}
-        </nav>
+        {message && (
+          <div className={`message ${message.includes('Error') ? 'error' : 'success'}`}>
+            {message}
+          </div>
+        )}
 
-        <div className="profile-form">
-          {activeSection === 'my_information' && (
-            <MyInformationSection 
-              data={profileData.my_information}
-              updateField={(field, value) => updateNestedField('my_information', field, value)}
-            />
-          )}
-          
-          {activeSection === 'my_experience' && (
-            <MyExperienceSection 
-              data={profileData.my_experience}
-              updateField={updateNestedField}
-              addArrayItem={addArrayItem}
-              removeArrayItem={removeArrayItem}
-              onFileUpload={handleFileUpload}
-              uploading={uploading}
-            />
-          )}
-          
-          {activeSection === 'application_questions' && (
-            <ApplicationQuestionsSection 
-              data={profileData.application_questions}
-              updateField={(field, value) => updateNestedField('application_questions', field, value)}
-            />
-          )}
-          
-          {activeSection === 'personal_information' && (
-            <PersonalInformationSection 
-              data={profileData.personal_information}
-              updateField={(field, value) => updateNestedField('personal_information', field, value)}
-            />
-          )}
-          
-          {activeSection === 'self_identity' && (
-            <SelfIdentitySection 
-              data={profileData.self_identity}
-              updateField={(field, value) => updateNestedField('self_identity', field, value)}
-            />
-          )}
+        <div className="profile-stats">
+          <div className="stat">
+            <div className="stat-value">{skillsCount}</div>
+            <div className="stat-label">Skills</div>
+          </div>
+          <div className="stat">
+            <div className="stat-value">{jobsCount}</div>
+            <div className="stat-label">Jobs</div>
+          </div>
+          <div className="stat">
+            <div className="stat-value">{eduCount}</div>
+            <div className="stat-label">Education</div>
+          </div>
+        </div>
+
+        <div className="profile-content">
+          <nav className="profile-nav">
+            {Object.keys(initialProfileData).map(section => (
+              <button
+                key={section}
+                className={`nav-btn ${activeSection === section ? 'active' : ''}`}
+                onClick={() => setActiveSection(section)}
+              >
+                {section.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+              </button>
+            ))}
+          </nav>
+
+          <div className="profile-form">
+            {activeSection === 'my_information' && (
+              <MyInformationSection 
+                data={profileData.my_information}
+                updateField={(field, value) => updateNestedField('my_information', field, value)}
+              />
+            )}
+            
+            {activeSection === 'my_experience' && (
+              <MyExperienceSection 
+                data={profileData.my_experience}
+                updateField={updateNestedField}
+                addArrayItem={addArrayItem}
+                removeArrayItem={removeArrayItem}
+                onFileUpload={handleFileUpload}
+                uploading={uploading}
+                onViewResume={viewResume}
+              />
+            )}
+            
+            {activeSection === 'application_questions' && (
+              <ApplicationQuestionsSection 
+                data={profileData.application_questions}
+                updateField={(field, value) => updateNestedField('application_questions', field, value)}
+              />
+            )}
+            
+            {activeSection === 'personal_information' && (
+              <PersonalInformationSection 
+                data={profileData.personal_information}
+                updateField={(field, value) => updateNestedField('personal_information', field, value)}
+              />
+            )}
+            
+            {activeSection === 'self_identity' && (
+              <SelfIdentitySection 
+                data={profileData.self_identity}
+                updateField={(field, value) => updateNestedField('self_identity', field, value)}
+              />
+            )}
+          </div>
         </div>
       </div>
     </div>
@@ -479,7 +530,7 @@ function MyInformationSection({ data, updateField }) {
 }
 
 
-function MyExperienceSection({ data, updateField, addArrayItem, removeArrayItem, onFileUpload, uploading }) {
+function MyExperienceSection({ data, updateField, addArrayItem, removeArrayItem, onFileUpload, uploading, onViewResume }) {
   return (
     <div className="form-section">
       <h2>My Experience</h2>
@@ -756,78 +807,42 @@ function MyExperienceSection({ data, updateField, addArrayItem, removeArrayItem,
 
       {/* Resume */}
       <div className="subsection">
-        <h3>Resume</h3>
-        
-        {/* File Upload Section */}
-        <div className="file-upload-container">
+        <div className="subsection-header">
+          <h3>Resume</h3>
+        </div>
+        <div className="form-row">
           <div className="form-group">
             <label>Upload Resume</label>
-            <div className="file-upload-wrapper">
-              <input 
-                type="file" 
-                id="resume-upload"
-                accept=".pdf,.doc,.docx"
-                onChange={(e) => {
-                  const file = e.target.files[0];
-                  if (file) {
-                    onFileUpload(file);
-                  }
-                }}
-                className="file-input"
-                disabled={uploading}
-              />
-              <label htmlFor="resume-upload" className={`file-upload-btn ${uploading ? 'uploading' : ''}`}>
-                {uploading ? (
-                  <>
-                    <span className="upload-spinner"></span>
-                    Uploading...
-                  </>
-                ) : (
-                  <>
-                    <span className="upload-icon">📄</span>
-                    Choose Resume File
-                  </>
-                )}
-              </label>
-            </div>
-            <small className="file-help-text">Supported formats: PDF, DOC, DOCX (Max 10MB)</small>
+            <input 
+              type="file" 
+              accept=".pdf,.doc,.docx" 
+              onChange={onFileUpload}
+              disabled={uploading}
+            />
+            <small className="helper-text">Accepted: PDF, DOC, DOCX</small>
+          </div>
+          <div className="form-group">
+            <label>Current File</label>
+            <input type="text" value={data.resume.filename || ''} readOnly />
           </div>
         </div>
-
-        {/* Current Resume Display */}
-        {data.resume.filename && (
-          <div className="current-resume">
-            <div className="resume-info">
-              <span className="file-icon">📄</span>
-              <div className="file-details">
-                <span className="file-name">{data.resume.filename}</span>
-                {data.resume.file_url && (
-                  <a 
-                    href={data.resume.file_url} 
-                    target="_blank" 
-                    rel="noopener noreferrer"
-                    className="view-resume-link"
-                  >
-                    View Resume
-                  </a>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Manual URL Input (Alternative) */}
         <div className="form-group">
-          <label>Or provide Resume URL</label>
+          <button 
+            type="button" 
+            className="btn btn-secondary"
+            onClick={onViewResume}
+            disabled={!data.resume.path}
+          >
+            View Resume (secure)
+          </button>
+          <small className="helper-text">Link expires in 2 minutes</small>
+        </div>
+        <div className="form-group">
+          <label>Manual Resume URL</label>
           <input 
             type="url" 
-            value={data.resume.path} 
-            onChange={(e) => updateField('my_experience', 'resume', { 
-              path: e.target.value,
-              filename: e.target.value ? 'External Resume' : '',
-              file_url: e.target.value 
-            })}
-            placeholder="https://example.com/resume.pdf"
+            value={data.resume.file_url || ''}
+            onChange={(e) => updateField('my_experience', 'resume', { file_url: e.target.value })}
           />
         </div>
       </div>

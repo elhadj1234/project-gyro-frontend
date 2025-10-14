@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Point to sitemap for crawlers
+Sitemap: http://localhost:5173/sitemap.xml
