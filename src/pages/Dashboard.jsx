@@ -299,6 +299,25 @@ export default function Dashboard() {
         return;
       }
       
+      // Attempt to stop any running automation for this job first
+      try {
+        const link = savedLinks.find(l => l.id === linkId);
+        let sessionId = liveSessionData?.[linkId]?.sessionId;
+        if (!sessionId && link?.application_notes) {
+          try {
+            const notes = JSON.parse(link.application_notes);
+            sessionId = notes?.session_id || null;
+          } catch {
+            // ignore parse error
+          }
+        }
+        if (sessionId) {
+          await api.post('/stop-job', { session_id: sessionId });
+        }
+      } catch (stopErr) {
+        console.warn('Stop job failed (continuing with delete):', stopErr?.message || stopErr);
+      }
+      
       const { error } = await supabase
         .from('user_links')
         .delete()
