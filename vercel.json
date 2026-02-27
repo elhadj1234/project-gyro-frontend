@@ -1,0 +1,8 @@
+{
+  "rewrites": [
+    {
+      "source": "/api/(.*)",
+      "destination": "https://tempra-private-launch-1.onrender.com/$1"
+    }
+  ]
+}
