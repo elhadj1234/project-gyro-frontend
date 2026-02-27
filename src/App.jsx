@@ -5,7 +5,7 @@ import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ProtectedRoute from "./ProtectedRoute";
 import { useAuth } from "./AuthProvider";
-import { supabase } from "./supabaseClient";
+// import { supabase } from "./supabaseClient";
 
 function Home() { 
   return (
@@ -174,6 +174,8 @@ export default function App() {
     // Force redirect to auth page - no delays, no waiting
     window.location.replace('/auth');
   };
+
+  // Render app shell for all routes
 
   return (
     <div className="app">

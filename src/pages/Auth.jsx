@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate, useSearchParams } from "react-router-dom";
+import api from "../api";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -31,6 +32,17 @@ export default function Auth() {
       if (mode === "signin") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) throw error;
+        
+        // Also login to backend to set cookie
+        try {
+          await api.post('/login', { email, password });
+          console.log("Backend login successful");
+        } catch (backendError) {
+          console.error("Backend login failed:", backendError);
+          // Optional: decide if this should block the user or just warn
+          // For now, we'll proceed as the frontend auth is primary
+        }
+        
         setMessage("Welcome back! Redirecting...");
         setTimeout(() => navigate("/dashboard"), 1000);
       } else if (mode === "signup") {
@@ -63,13 +75,6 @@ export default function Auth() {
       setIsLoading(false);
     }
   };
-
-  const containerStyle = {};
-  const cardStyle = {};
-  const titleStyle = {};
-  const messageStyle = {};
-  const errorStyle = {};
-  const successStyle = {};
 
   return (
     <div className="auth-page">
