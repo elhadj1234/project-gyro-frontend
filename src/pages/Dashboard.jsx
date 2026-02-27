@@ -241,22 +241,21 @@ export default function Dashboard() {
         return; 
       }
 
-      // 2. Save to Supabase
+      const clip = (s, n) => (typeof s === 'string' ? s.slice(0, n) : s);
+      const safeTitle = clip((title.trim() || url.trim()), 255);
+      const safeDescription = description.trim() ? clip(description.trim(), 255) : null;
+      const notesStr = JSON.stringify({ session_id: sessionData.session_id });
+
       const { data, error } = await supabase
         .from('user_links')
         .insert({
           user_id: user.id,
           url: url.trim(),
-          title: title.trim() || url.trim(),
-          description: description.trim() || null,
+          title: safeTitle,
+          description: safeDescription,
           category: 'job_application',
           tags: ['job_application'],
-          // We can try to store session_id in application_notes if possible, 
-          // or just rely on local state since backend is in-memory
-          application_notes: JSON.stringify({ 
-            session_id: sessionData.session_id,
-            initial_live_url: sessionData.live_url
-          })
+          application_notes: notesStr
         })
         .select();
 
