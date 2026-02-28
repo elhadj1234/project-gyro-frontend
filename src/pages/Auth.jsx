@@ -46,7 +46,13 @@ export default function Auth() {
         setMessage("Welcome back! Redirecting...");
         setTimeout(() => navigate("/dashboard"), 1000);
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ email, password });
+        const { error } = await supabase.auth.signUp({ 
+          email, 
+          password,
+          options: {
+            emailRedirectTo: window.location.origin,
+          }
+        });
         if (error) throw error;
         setMessage("🎉 Account created! Check your email to confirm sign up!");
       } else if (mode === "reset") {
