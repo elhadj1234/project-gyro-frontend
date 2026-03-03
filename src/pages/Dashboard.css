@@ -1,0 +1,177 @@
+/*
+ * Dashboard Page Styles
+ * Better Stack inspired grayscale theme
+ */
+
+/* Loading State */
+.dash-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-4);
+  min-height: 300px;
+  color: var(--text-secondary);
+}
+
+/* Stats Row */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+}
+
+.dash-stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-1);
+  padding: var(--space-5);
+  background-color: var(--bg-secondary);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+}
+
+.dash-stat-value {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-bold);
+  color: var(--text-primary);
+}
+
+.dash-stat-success {
+  color: var(--accent-success);
+}
+
+.dash-stat-label {
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+}
+
+/* Add Job Section */
+.dash-add-section {
+  margin-bottom: var(--space-6);
+}
+
+.dash-add-form {
+  width: 100%;
+}
+
+.dash-form-row {
+  display: flex;
+  gap: var(--space-3);
+}
+
+.dash-url-input {
+  flex: 1;
+}
+
+/* Jobs Grid */
+.dash-jobs-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+  gap: var(--space-4);
+}
+
+/* Job Card */
+.dash-job-card {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-5);
+}
+
+.dash-job-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.dash-job-info {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-width: 0;
+}
+
+.dash-job-title {
+  font-size: var(--text-base);
+  font-weight: var(--font-semibold);
+  color: var(--text-primary);
+  margin: 0;
+  line-height: var(--leading-snug);
+}
+
+.dash-job-url {
+  display: block;
+  font-size: var(--text-sm);
+  color: var(--text-tertiary);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  transition: color var(--transition-fast);
+  margin-bottom: var(--space-3);
+}
+
+.dash-job-url:hover {
+  color: var(--text-secondary);
+}
+
+.dash-job-desc {
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  line-height: var(--leading-relaxed);
+  margin: 0 0 var(--space-4) 0;
+}
+
+.dash-job-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: auto;
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--border-subtle);
+}
+
+.dash-job-actions .btn {
+  flex: 1;
+  justify-content: center;
+}
+
+.dash-delete-btn:hover {
+  color: var(--accent-error);
+}
+
+.dash-delete-btn:hover svg {
+  color: var(--accent-error);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .dash-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .dash-form-row {
+    flex-direction: column;
+  }
+
+  .dash-jobs-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .dash-stat-card {
+    padding: var(--space-4);
+  }
+
+  .dash-stat-value {
+    font-size: var(--text-2xl);
+  }
+
+  .dash-job-actions {
+    flex-direction: column;
+  }
+}
