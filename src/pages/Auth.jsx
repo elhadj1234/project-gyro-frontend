@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "../supabaseClient";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import api from "../api";
+import "./Auth.css";
 
 export default function Auth() {
   const navigate = useNavigate();
@@ -15,10 +16,9 @@ export default function Auth() {
   const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
-    // Check if this is a password update from email link
-    const modeParam = searchParams.get('mode');
-    if (modeParam === 'update-password') {
-      setMode('update-password');
+    const modeParam = searchParams.get("mode");
+    if (modeParam === "update-password") {
+      setMode("update-password");
     }
   }, [searchParams]);
 
@@ -27,40 +27,40 @@ export default function Auth() {
     setError("");
     setMessage("");
     setIsLoading(true);
-    
+
     try {
       if (mode === "signin") {
-        const { error } = await supabase.auth.signInWithPassword({ email, password });
+        const { error } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
         if (error) throw error;
-        
-        // Also login to backend to set cookie
+
         try {
-          await api.post('/login', { email, password });
+          await api.post("/login", { email, password });
           console.log("Backend login successful");
         } catch (backendError) {
           console.error("Backend login failed:", backendError);
-          // Optional: decide if this should block the user or just warn
-          // For now, we'll proceed as the frontend auth is primary
         }
-        
+
         setMessage("Welcome back! Redirecting...");
         setTimeout(() => navigate("/dashboard"), 1000);
       } else if (mode === "signup") {
-        const { error } = await supabase.auth.signUp({ 
-          email, 
+        const { error } = await supabase.auth.signUp({
+          email,
           password,
           options: {
             emailRedirectTo: window.location.origin,
-          }
+          },
         });
         if (error) throw error;
-        setMessage("🎉 Account created! Check your email to confirm sign up!");
+        setMessage("Account created! Check your email to confirm sign up.");
       } else if (mode === "reset") {
         const { error } = await supabase.auth.resetPasswordForEmail(email, {
           redirectTo: `${window.location.origin}/auth?mode=update-password`,
         });
         if (error) throw error;
-        setMessage("📧 Password reset email sent! Check your inbox.");
+        setMessage("Password reset email sent! Check your inbox.");
       } else if (mode === "update-password") {
         if (password !== confirmPassword) {
           setError("Passwords do not match");
@@ -68,7 +68,7 @@ export default function Auth() {
         }
         const { error } = await supabase.auth.updateUser({ password });
         if (error) throw error;
-        setMessage("✅ Password updated successfully! You can now sign in.");
+        setMessage("Password updated successfully! You can now sign in.");
         setTimeout(() => {
           setMode("signin");
           setPassword("");
@@ -82,134 +82,189 @@ export default function Auth() {
     }
   };
 
+  const getTitle = () => {
+    switch (mode) {
+      case "signin":
+        return "Welcome back";
+      case "signup":
+        return "Create account";
+      case "reset":
+        return "Reset password";
+      case "update-password":
+        return "Update password";
+      default:
+        return "Sign in";
+    }
+  };
+
+  const getSubtitle = () => {
+    switch (mode) {
+      case "signin":
+        return "Sign in to your account to continue";
+      case "signup":
+        return "Create an account to get started";
+      case "reset":
+        return "Enter your email to reset your password";
+      case "update-password":
+        return "Enter your new password";
+      default:
+        return "";
+    }
+  };
+
+  const getButtonText = () => {
+    if (isLoading) return "Processing...";
+    switch (mode) {
+      case "signin":
+        return "Sign in";
+      case "signup":
+        return "Create account";
+      case "reset":
+        return "Send reset email";
+      case "update-password":
+        return "Update password";
+      default:
+        return "Submit";
+    }
+  };
+
   return (
     <div className="auth-page">
-      <div className="dashboard-card">
-        <h1 className="dashboard-title">
-          {mode === "signin" ? "Welcome Back" : 
-           mode === "signup" ? "Create Account" : 
-           mode === "reset" ? "Reset Password" : "Update Password"}
-        </h1>
-        
-        <form onSubmit={handleSubmit}>
-          <input
-            type="email"
-            placeholder="✉️ Enter your email"
-            value={email}
-            required
-            onChange={(e) => setEmail(e.target.value)}
-            className="input-control"
-          />
-          
-          {mode !== "reset" && (
-            <>
+      <div className="auth-container">
+        <div className="auth-card card">
+          <div className="auth-header">
+            <h1 className="auth-title">{getTitle()}</h1>
+            <p className="auth-subtitle">{getSubtitle()}</p>
+          </div>
+
+          <form className="auth-form" onSubmit={handleSubmit}>
+            <div className="input-group">
+              <label htmlFor="email" className="input-label">
+                Email
+              </label>
               <input
-                type="password"
-                placeholder={mode === "update-password" ? "🔒 Enter new password" : "🔒 Enter your password"}
-                value={password}
+                id="email"
+                type="email"
+                className="input"
+                placeholder="you@example.com"
+                value={email}
                 required
-                onChange={(e) => setPassword(e.target.value)}
-                className="input-control"
+                onChange={(e) => setEmail(e.target.value)}
               />
-              
-              {mode === "update-password" && (
+            </div>
+
+            {mode !== "reset" && (
+              <div className="input-group">
+                <label htmlFor="password" className="input-label">
+                  {mode === "update-password" ? "New password" : "Password"}
+                </label>
                 <input
+                  id="password"
                   type="password"
-                  placeholder="🔒 Confirm new password"
+                  className="input"
+                  placeholder="Enter your password"
+                  value={password}
+                  required
+                  onChange={(e) => setPassword(e.target.value)}
+                />
+              </div>
+            )}
+
+            {mode === "update-password" && (
+              <div className="input-group">
+                <label htmlFor="confirmPassword" className="input-label">
+                  Confirm password
+                </label>
+                <input
+                  id="confirmPassword"
+                  type="password"
+                  className="input"
+                  placeholder="Confirm your password"
                   value={confirmPassword}
                   required
                   onChange={(e) => setConfirmPassword(e.target.value)}
-                  className="input-control"
                 />
-              )}
-            </>
-          )}
-          
-          <button 
-            type="submit" 
-            disabled={isLoading}
-            className="btn btn-primary"
-          >
-            {isLoading ? (
-              <span>⏳ Processing...</span>
-            ) : (
-              <span>
-                {mode === "signin" ? "🚀 Sign In" : 
-                 mode === "signup" ? "✨ Create Account" : 
-                 mode === "reset" ? "📧 Send Reset Email" : "🔄 Update Password"}
-              </span>
+              </div>
             )}
-          </button>
-        </form>
-        
-        {error && <div className="dashboard-message dashboard-message--error">❌ {error}</div>}
-        {message && <div className="dashboard-message dashboard-message--success">{message}</div>}
-        
-          <div className="auth-helper">
+
+            {error && <div className="alert alert-error">{error}</div>}
+            {message && <div className="alert alert-success">{message}</div>}
+
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="btn btn-primary btn-full"
+            >
+              {isLoading && <span className="spinner spinner-sm" />}
+              {getButtonText()}
+            </button>
+          </form>
+
+          <div className="auth-footer">
             {mode === "signin" && (
               <>
-                <p className="helper-text">
+                <p className="auth-footer-text">
                   Don't have an account?{" "}
-                  <button 
-                    type="button" 
+                  <button
+                    type="button"
                     onClick={() => setMode("signup")}
-                    className="link-btn"
+                    className="auth-link"
                   >
-                    Create one here ✨
+                    Create one
                   </button>
                 </p>
-                <p className="helper-text">
-                  Forgot your password?{" "}
-                  <button 
-                    type="button" 
+                <p className="auth-footer-text">
+                  <button
+                    type="button"
                     onClick={() => setMode("reset")}
-                    className="link-btn"
+                    className="auth-link"
                   >
-                    Reset it here 🔑
+                    Forgot your password?
                   </button>
                 </p>
               </>
             )}
-            
+
             {mode === "signup" && (
-              <p className="helper-text">
+              <p className="auth-footer-text">
                 Already have an account?{" "}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setMode("signin")}
-                  className="link-btn"
+                  className="auth-link"
                 >
-                  Sign in here 🚀
+                  Sign in
                 </button>
               </p>
             )}
-            
+
             {mode === "reset" && (
-              <p className="helper-text">
+              <p className="auth-footer-text">
                 Remember your password?{" "}
-                <button 
-                  type="button" 
+                <button
+                  type="button"
                   onClick={() => setMode("signin")}
-                  className="link-btn"
+                  className="auth-link"
                 >
-                  Sign in here 🚀
+                  Sign in
                 </button>
               </p>
             )}
-            
+
             {mode === "update-password" && (
-              <p className="helper-text">
-                <button 
-                  type="button" 
+              <p className="auth-footer-text">
+                <button
+                  type="button"
                   onClick={() => setMode("signin")}
-                  className="link-btn"
+                  className="auth-link"
                 >
-                  ← Back to Sign In
+                  Back to sign in
                 </button>
               </p>
             )}
           </div>
-         </div>
-       </div>
-     );
-   }
+        </div>
+      </div>
+    </div>
+  );
+}
