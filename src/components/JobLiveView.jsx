@@ -1,16 +1,17 @@
-import React, { useState } from 'react';
-import api from '../api';
+import { useState } from "react";
+import api from "../api";
+import "./JobLiveView.css";
 
 export default function JobLiveView({ liveUrl, sessionId, onClose, onApply }) {
   const [starting, setStarting] = useState(false);
   const [started, setStarted] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
 
   const handleApply = async () => {
     setStarting(true);
-    setError('');
+    setError("");
     try {
-      await api.post('/start-job', { session_id: sessionId });
+      await api.post("/start-job", { session_id: sessionId });
       setStarted(true);
       onApply();
     } catch (err) {
@@ -21,128 +22,76 @@ export default function JobLiveView({ liveUrl, sessionId, onClose, onApply }) {
   };
 
   return (
-    <div className="modal-overlay">
-      <div className="modal-content live-view-modal">
-        <div className="modal-header">
-          <h2>Live Application View</h2>
-          <button onClick={onClose} className="close-btn">×</button>
+    <div className="liveview-backdrop">
+      <div className="liveview-modal">
+        <div className="liveview-header">
+          <div className="liveview-header-text">
+            <h2 className="liveview-title">Live Application View</h2>
+            <p className="liveview-subtitle">
+              {started
+                ? "Automation is running. Watch the progress below."
+                : "Sign in to the job site below, then click \"Apply for me\"."}
+            </p>
+          </div>
+          <button onClick={onClose} className="liveview-close" aria-label="Close">
+            <svg width="20" height="20" viewBox="0 0 20 20" fill="currentColor">
+              <path
+                fillRule="evenodd"
+                d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z"
+                clipRule="evenodd"
+              />
+            </svg>
+          </button>
         </div>
-        
-        <div className="modal-body">
-          <p className="instruction-text">
-            {started 
-              ? "Automation is running! You can watch the progress below." 
-              : "Please sign in to the job site below. Once you are logged in and on the application page, click \"Apply for me\"."}
-          </p>
-          
-          <div className="iframe-container">
+
+        <div className="liveview-body">
+          {error && <div className="alert alert-error">{error}</div>}
+
+          <div className="liveview-iframe-container">
             {liveUrl ? (
-              <iframe 
-                src={liveUrl} 
-                title="Job Application Live View" 
-                className="live-iframe"
+              <iframe
+                src={liveUrl}
+                title="Job Application Live View"
+                className="liveview-iframe"
                 allow="clipboard-read; clipboard-write"
               />
             ) : (
-              <div className="loading-placeholder">Loading live view...</div>
+              <div className="liveview-loading">
+                <div className="spinner spinner-lg" />
+                <p>Loading live view...</p>
+              </div>
             )}
           </div>
-          
-          {error && <div className="error-message">{error}</div>}
         </div>
-        
-        <div className="modal-footer">
-          <button onClick={onClose} className="btn btn-secondary">{started ? 'Close' : 'Cancel'}</button>
+
+        <div className="liveview-footer">
+          <button onClick={onClose} className="btn btn-secondary">
+            {started ? "Close" : "Cancel"}
+          </button>
           {!started && (
-            <button 
-              onClick={handleApply} 
+            <button
+              onClick={handleApply}
               className="btn btn-primary"
               disabled={starting}
             >
-              {starting ? 'Starting...' : 'Apply for me'}
+              {starting ? (
+                <>
+                  <span className="spinner spinner-sm" />
+                  Starting...
+                </>
+              ) : (
+                "Apply for me"
+              )}
             </button>
           )}
           {started && (
-            <button className="btn btn-success" disabled>
+            <button className="btn liveview-running-btn" disabled>
+              <span className="liveview-pulse" />
               Running...
             </button>
           )}
         </div>
       </div>
-      
-      <style>{`
-        .modal-overlay {
-          position: fixed;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: rgba(0, 0, 0, 0.7);
-          display: flex;
-          align-items: center;
-          justify-content: center;
-          z-index: 1000;
-        }
-        .modal-content {
-          background: white;
-          border-radius: 8px;
-          width: 90%;
-          max-width: 1000px;
-          height: 85vh;
-          display: flex;
-          flex-direction: column;
-          box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
-        }
-        .modal-header {
-          padding: 16px 24px;
-          border-bottom: 1px solid #eee;
-          display: flex;
-          justify-content: space-between;
-          align-items: center;
-        }
-        .modal-body {
-          flex: 1;
-          padding: 24px;
-          display: flex;
-          flex-direction: column;
-          overflow: hidden;
-        }
-        .modal-footer {
-          padding: 16px 24px;
-          border-top: 1px solid #eee;
-          display: flex;
-          justify-content: flex-end;
-          gap: 12px;
-        }
-        .iframe-container {
-          flex: 1;
-          border: 1px solid #ddd;
-          border-radius: 4px;
-          overflow: hidden;
-          background: #f9f9f9;
-        }
-        .live-iframe {
-          width: 100%;
-          height: 100%;
-          border: none;
-        }
-        .instruction-text {
-          margin-bottom: 16px;
-          color: #555;
-          font-weight: 500;
-        }
-        .close-btn {
-          background: none;
-          border: none;
-          font-size: 24px;
-          cursor: pointer;
-          color: #666;
-        }
-        .error-message {
-          color: red;
-          margin-top: 8px;
-        }
-      `}</style>
     </div>
   );
 }
